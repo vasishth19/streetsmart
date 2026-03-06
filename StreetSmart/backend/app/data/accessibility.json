@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "description": "Accessibility infrastructure data",
+  "zones": [
+    {
+      "id": "access_001",
+      "lat": 40.7128,
+      "lng": -74.0060,
+      "radius_km": 0.5,
+      "has_ramps": true,
+      "has_tactile_paving": false,
+      "has_audio_signals": true,
+      "has_elevators": true,
+      "surface_quality": "good",
+      "accessibility_score": 72,
+      "label": "Downtown – Partially Accessible"
+    },
+    {
+      "id": "access_002",
+      "lat": 40.7580,
+      "lng": -73.9855,
+      "radius_km": 0.4,
+      "has_ramps": true,
+      "has_tactile_paving": true,
+      "has_audio_signals": true,
+      "has_elevators": true,
+      "surface_quality": "excellent",
+      "accessibility_score": 95,
+      "label": "Midtown – Fully Accessible"
+    },
+    {
+      "id": "access_003",
+      "lat": 40.7282,
+      "lng": -73.7949,
+      "radius_km": 0.6,
+      "has_ramps": false,
+      "has_tactile_paving": false,
+      "has_audio_signals": false,
+      "has_elevators": false,
+      "surface_quality": "poor",
+      "accessibility_score": 28,
+      "label": "East Side – Poorly Accessible"
+    }
+  ]
+}

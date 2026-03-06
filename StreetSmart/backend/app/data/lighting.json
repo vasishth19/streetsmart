@@ -1,0 +1,61 @@
+{
+  "version": "1.0.0",
+  "description": "Street lighting infrastructure data",
+  "zones": [
+    {
+      "id": "light_001",
+      "lat": 40.7128,
+      "lng": -74.0060,
+      "radius_km": 0.3,
+      "lighting_level": "DIM",
+      "lux_level": 15,
+      "has_smart_lights": false,
+      "maintenance_status": "poor",
+      "label": "Dark Alley District"
+    },
+    {
+      "id": "light_002",
+      "lat": 40.7580,
+      "lng": -73.9855,
+      "radius_km": 0.5,
+      "lighting_level": "BRIGHT",
+      "lux_level": 150,
+      "has_smart_lights": true,
+      "maintenance_status": "excellent",
+      "label": "Times Square Bright Zone"
+    },
+    {
+      "id": "light_003",
+      "lat": 40.7282,
+      "lng": -73.7949,
+      "radius_km": 0.4,
+      "lighting_level": "MODERATE",
+      "lux_level": 60,
+      "has_smart_lights": false,
+      "maintenance_status": "good",
+      "label": "Residential Moderate Zone"
+    },
+    {
+      "id": "light_004",
+      "lat": 40.7489,
+      "lng": -73.9680,
+      "radius_km": 0.2,
+      "lighting_level": "DIM",
+      "lux_level": 8,
+      "has_smart_lights": false,
+      "maintenance_status": "critical",
+      "label": "Unlit Pathway"
+    },
+    {
+      "id": "light_005",
+      "lat": 40.6892,
+      "lng": -74.0445,
+      "radius_km": 0.7,
+      "lighting_level": "BRIGHT",
+      "lux_level": 120,
+      "has_smart_lights": true,
+      "maintenance_status": "good",
+      "label": "Commercial District"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════
+   NEON GLOW ANIMATIONS
+═══════════════════════════════════════ */
+
+@keyframes glowPulse {
+  0%, 100% { 
+    box-shadow: 0 0 5px currentColor, 0 0 15px currentColor, 0 0 30px currentColor;
+    opacity: 1;
+  }
+  50% { 
+    box-shadow: 0 0 10px currentColor, 0 0 30px currentColor, 0 0 60px currentColor;
+    opacity: 0.8;
+  }
+}
+
+@keyframes textGlow {
+  0%, 100% { 
+    text-shadow: 0 0 4px currentColor, 0 0 10px currentColor;
+  }
+  50% { 
+    text-shadow: 0 0 8px currentColor, 0 0 20px currentColor, 0 0 40px currentColor;
+  }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(0, 229, 255, 0.3); }
+  50% { border-color: rgba(0, 229, 255, 0.8); }
+}
+
+@keyframes routeFlow {
+  0% { stroke-dashoffset: 1000; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes radarScan {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes dataStream {
+  0% { transform: translateY(100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
+@keyframes nodeAppear {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Glow Classes */
+.glow-green { 
+  animation: glowPulse 2s ease-in-out infinite;
+  color: #00FF9C;
+}
+
+.glow-cyan { 
+  animation: glowPulse 2.5s ease-in-out infinite;
+  color: #00E5FF;
+}
+
+.glow-red { 
+  animation: glowPulse 1.5s ease-in-out infinite;
+  color: #FF3B3B;
+}
+
+.glow-amber { 
+  animation: glowPulse 2s ease-in-out infinite;
+  color: #FFB020;
+}
+
+.text-glow-green {
+  animation: textGlow 2s ease-in-out infinite;
+  color: #00FF9C;
+}
+
+.text-glow-cyan {
+  animation: textGlow 2.5s ease-in-out infinite;
+  color: #00E5FF;
+}
+
+.border-glow-cyan {
+  animation: borderGlow 2s ease-in-out infinite;
+}
+
+/* Active Route Indicator */
+.route-active {
+  stroke-dasharray: 20 5;
+  animation: routeFlow 2s linear infinite;
+}
+
+/* Radar Animation */
+.radar-active {
+  animation: radarScan 3s linear infinite;
+  transform-origin: center;
+}
+
+/* Data Stream Animation */
+.data-stream {
+  animation: dataStream 4s ease-in-out infinite;
+}
+
+/* Node Appear */
+.node-appear {
+  animation: nodeAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}

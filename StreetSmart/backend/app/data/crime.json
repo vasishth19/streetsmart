@@ -1,0 +1,62 @@
+{
+  "version": "1.0.0",
+  "description": "Simulated crime incident data for StreetSmart safety scoring",
+  "last_updated": "2024-01-01",
+  "zones": [
+    {
+      "id": "zone_001",
+      "lat": 40.7128,
+      "lng": -74.0060,
+      "radius_km": 0.5,
+      "crime_index": 0.78,
+      "incident_types": ["theft", "harassment", "vandalism"],
+      "peak_hours": [22, 23, 0, 1, 2],
+      "label": "Downtown High Risk Zone"
+    },
+    {
+      "id": "zone_002",
+      "lat": 40.7580,
+      "lng": -73.9855,
+      "radius_km": 0.3,
+      "crime_index": 0.45,
+      "incident_types": ["theft"],
+      "peak_hours": [20, 21, 22],
+      "label": "Midtown Moderate Zone"
+    },
+    {
+      "id": "zone_003",
+      "lat": 40.7282,
+      "lng": -73.7949,
+      "radius_km": 0.8,
+      "crime_index": 0.25,
+      "incident_types": ["vandalism"],
+      "peak_hours": [23, 0],
+      "label": "East Side Low Risk"
+    },
+    {
+      "id": "zone_004",
+      "lat": 40.7489,
+      "lng": -73.9680,
+      "radius_km": 0.4,
+      "crime_index": 0.90,
+      "incident_types": ["assault", "robbery", "harassment"],
+      "peak_hours": [21, 22, 23, 0, 1],
+      "label": "Critical Zone – Avoid at Night"
+    },
+    {
+      "id": "zone_005",
+      "lat": 40.6892,
+      "lng": -74.0445,
+      "radius_km": 0.6,
+      "crime_index": 0.35,
+      "incident_types": ["theft", "vandalism"],
+      "peak_hours": [20, 21],
+      "label": "South Side"
+    }
+  ],
+  "metadata": {
+    "source": "simulated",
+    "city": "New York City",
+    "coordinate_system": "WGS84"
+  }
+}

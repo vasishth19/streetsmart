@@ -1,0 +1,109 @@
+/* ─── styles/accessibility.css ───────────────────────────────────
+   Accessibility mode styles — applied when <html class="a11y-mode">
+──────────────────────────────────────────────────────────────────── */
+
+/* High contrast text */
+.a11y-mode {
+  --text-primary:   #FFFFFF;
+  --text-secondary: #DDDDDD;
+  --bg-primary:     #000000;
+  --bg-secondary:   #0A0A0A;
+  --border-color:   #00FF9C;
+}
+
+/* Larger base font */
+.a11y-mode body,
+.a11y-mode p,
+.a11y-mode span,
+.a11y-mode div {
+  font-size: 1.1rem !important;
+  line-height: 1.7 !important;
+}
+
+.a11y-mode h1 { font-size: 2.4rem !important; }
+.a11y-mode h2 { font-size: 2rem   !important; }
+.a11y-mode h3 { font-size: 1.6rem !important; }
+
+/* Larger buttons */
+.a11y-mode button,
+.a11y-mode [role="button"] {
+  min-height: 48px !important;
+  min-width:  48px !important;
+  font-size:  1rem !important;
+}
+
+/* High-contrast borders */
+.a11y-mode input,
+.a11y-mode textarea,
+.a11y-mode select {
+  border: 2px solid #00FF9C !important;
+  font-size: 1rem !important;
+  padding: 12px !important;
+}
+
+/* Focus rings — extra visible */
+.a11y-mode *:focus-visible {
+  outline: 3px solid #00FF9C !important;
+  outline-offset: 3px !important;
+}
+
+/* Remove animations that could cause discomfort */
+.a11y-mode *,
+.a11y-mode *::before,
+.a11y-mode *::after {
+  animation-duration:   0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration:  0.01ms !important;
+  scroll-behavior:      auto !important;
+}
+
+/* Keep pulse animations for status indicators */
+.a11y-mode .animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+/* High contrast cards */
+.a11y-mode .glass-panel {
+  background: rgba(0, 0, 0, 0.95) !important;
+  border: 2px solid #00FF9C !important;
+}
+
+/* Scanlines off in a11y mode */
+.a11y-mode .scanlines {
+  display: none !important;
+}
+
+/* Simplified map sidebar */
+.a11y-mode .map-sidebar {
+  background: #000000 !important;
+  border-right: 3px solid #00FF9C !important;
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip to content link */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  background: #00FF9C;
+  color: #000;
+  padding: 8px 16px;
+  font-weight: bold;
+  z-index: 9999;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 0;
+}
