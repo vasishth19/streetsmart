@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime, timedelta
-from passlib.context import CryptContext
+import hashlib
 from jose import JWTError, jwt
 import os
 
@@ -16,7 +16,7 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY", "streetsmart-secret-key-change-in-produ
 ALGORITHM  = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
-pwd_ctx  = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 oauth2   = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 # In-memory user store for demo (replace with DB in production)
@@ -24,7 +24,7 @@ _users: dict[int, dict] = {
     1: {
         "id": 1, "name": "Demo User",
         "email": "demo@streetsmart.city",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
+        "hashed_password": hashlib.sha256("demo12".encode()).hexdigest(),
         "created_at": datetime.utcnow().isoformat(),
     }
 }
@@ -99,7 +99,7 @@ async def signup(body: SignupRequest):
         "id":              user_id,
         "name":            body.name,
         "email":           body.email,
-        "hashed_password": pwd_ctx.hash(body.password),
+        "hashed_password": hashlib.sha256(body.password.encode()).hexdigest(),
         "created_at":      datetime.utcnow().isoformat(),
     }
     return TokenResponse(access_token=create_token(user_id))
@@ -108,7 +108,7 @@ async def signup(body: SignupRequest):
 @router.post("/login", response_model=TokenResponse)
 async def login(form: OAuth2PasswordRequestForm = Depends()):
     user = get_user_by_email(form.username)
-    if not user or not pwd_ctx.verify(form.password, user["hashed_password"]):
+    if not user or hashlib.sha256(form.password.encode()).hexdigest() != user["hashed_password"]:
         raise HTTPException(status_code=401, detail="Incorrect email or password")
     return TokenResponse(access_token=create_token(user["id"]))
 
