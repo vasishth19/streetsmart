@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -19,6 +20,7 @@ import { useRoutes } from '@/hooks/useRoutes';
 import { useSpeech } from '@/hooks/useSpeech';
 import type { RouteResult } from '@/services/api';
 import toast from 'react-hot-toast';
+
 
 const MapCanvas = dynamic(() => import('@/components/map/MapCanvas'), { ssr: false });
 
@@ -290,6 +292,19 @@ export default function MapPage() {
   const [sidebarOpen,      setSidebarOpen]       = useState(true);
 
   const { routes, loading, fetchRoutes, clearRoutes } = useRoutes();
+  const router = useRouter();
+const [username, setUsername] = useState('');
+
+useEffect(() => {
+  const user = localStorage.getItem('user');
+  if (user) setUsername(JSON.parse(user).username || 'User');
+}, []);
+
+const handleLogout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  router.push('/');
+};
   const { speak, stop, speaking }                     = useSpeech();
   const { enabled: a11y, toggle: toggleA11y }         = useAccessibilityMode();
 
@@ -443,6 +458,13 @@ export default function MapPage() {
               className={`p-2 rounded-lg border transition-all ${audioEnabled ? 'border-[#B388FF]/60 bg-[#B388FF]/10 text-[#B388FF]' : 'border-[#1a2a4a] text-[#8892B0] hover:text-[#B388FF]'}`}>
               {audioEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
+            {username && (
+  <span className="text-xs font-mono text-[#00FF9C]">👤 {username}</span>
+)}
+<button onClick={handleLogout}
+  className="p-2 rounded-lg border border-[#FF3B3B]/40 text-[#FF3B3B] hover:bg-[#FF3B3B]/10 text-xs font-mono transition-all">
+  Logout
+</button>
             <button onClick={() => setSidebarOpen((v) => !v)} title="Toggle sidebar"
               className="p-2 rounded-lg border border-[#1a2a4a] text-[#8892B0] hover:text-[#00E5FF] transition-all">
               <ChevronRight className={`w-4 h-4 transition-transform ${sidebarOpen ? 'rotate-180' : ''}`} />
