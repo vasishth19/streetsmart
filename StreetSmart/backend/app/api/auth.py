@@ -24,7 +24,7 @@ _users: dict[int, dict] = {
     1: {
         "id": 1, "name": "Demo User",
         "email": "demo@streetsmart.city",
-        "hashed_password": pwd_ctx.hash("demo12"),
+        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
         "created_at": datetime.utcnow().isoformat(),
     }
 }
