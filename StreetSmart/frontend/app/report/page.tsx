@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowLeft, MapPin, AlertTriangle, CheckCircle, ThumbsUp } from 'lucide-react';
@@ -40,26 +40,6 @@ interface ExistingReport {
   lng: number;
 }
 
-const MOCK_REPORTS: ExistingReport[] = [
-  {
-    id: '1', issue_type: 'poor_lighting', severity: 'high',
-    description: 'Street lights out on 3rd block – very dark at night',
-    status: 'investigating', votes: 12, address: '3rd Ave & 42nd St',
-    created_at: '2024-01-15', lat: 40.7128, lng: -74.0060,
-  },
-  {
-    id: '2', issue_type: 'broken_sidewalk', severity: 'medium',
-    description: 'Large crack near bus stop – wheelchair hazard',
-    status: 'reported', votes: 8, address: 'Broadway & 47th St',
-    created_at: '2024-01-14', lat: 40.7580, lng: -73.9855,
-  },
-  {
-    id: '3', issue_type: 'missing_ramp', severity: 'high',
-    description: 'No wheelchair ramp at corner',
-    status: 'resolved', votes: 23, address: 'Park Ave & 110th St',
-    created_at: '2024-01-10', lat: 40.7282, lng: -73.7949,
-  },
-];
 
 export default function ReportPage() {
   const [issueType, setIssueType] = useState('');
@@ -68,8 +48,14 @@ export default function ReportPage() {
   const [address, setAddress] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [reports, setReports] = useState<ExistingReport[]>(MOCK_REPORTS);
+  const [reports, setReports] = useState<ExistingReport[]>([]);
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
+  
+  useEffect(() => {
+  apiService.getReports().then(data => {
+    if (Array.isArray(data)) setReports(data);
+  }).catch(() => {});
+}, []);
 
   const handleSubmit = async () => {
     if (!issueType) {
