@@ -22,3 +22,6 @@ shapely==2.0.4
 
 # Utilities
 python-dotenv==1.0.1
+
+# Database
+supabase==2.3.0
