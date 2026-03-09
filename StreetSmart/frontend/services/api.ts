@@ -139,12 +139,12 @@ export const apiService = {
   },
 
   async submitReport(report: ReportRequest) {
-    const res = await apiClient.post('/api/reports', report);
+    const res = await apiClient.post('/reports', report);
     return res.data;
   },
 
   async getReports() {
-    const res = await apiClient.get('/api/reports');
+    const res = await apiClient.get('/reports');
     return res.data;
   },
 
