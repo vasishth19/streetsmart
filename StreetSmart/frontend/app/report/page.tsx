@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, AlertTriangle, CheckCircle, ThumbsUp } from 'lucide-react';
+import { ArrowLeft, MapPin, AlertTriangle, CheckCircle, ThumbsUp, Camera, Upload, X, Video } from 'lucide-react';
 import toast from 'react-hot-toast';
 import GlowButton from '@/components/ui/GlowButton';
 import NeonCard from '@/components/ui/NeonCard';
@@ -50,6 +50,19 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(false);
   const [reports, setReports] = useState<ExistingReport[]>([]);
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachedFiles(prev => [...prev, ...files].slice(0, 5));
+  };
+  const removeFile = (idx: number) => setAttachedFiles(prev => prev.filter((_, i) => i !== idx));
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    setAttachedFiles(prev => [...prev, ...files].slice(0, 5));
+  };
   
   useEffect(() => {
   apiService.getReports().then(data => {
@@ -70,8 +83,8 @@ export default function ReportPage() {
     setLoading(true);
     try {
       await apiService.submitReport({
-        lat: 40.7128,
-        lng: -74.0060,
+        lat: 26.8467,
+        lng: 80.9462,
         issue_type: issueType as any,
         severity: severity as any,
         description,
@@ -88,8 +101,8 @@ export default function ReportPage() {
         votes: 0,
         address,
         created_at: new Date().toISOString().split('T')[0],
-        lat: 40.7128,
-        lng: -74.0060,
+        lat: 26.8467,
+        lng: 80.9462,
       };
       setReports(prev => [newReport, ...prev]);
       setSubmitted(true);
@@ -105,8 +118,8 @@ export default function ReportPage() {
         votes: 0,
         address,
         created_at: new Date().toISOString().split('T')[0],
-        lat: 40.7128,
-        lng: -74.0060,
+        lat: 26.8467,
+        lng: 80.9462,
       };
       setReports(prev => [newReport, ...prev]);
       setSubmitted(true);
@@ -141,7 +154,7 @@ export default function ReportPage() {
       <div className="scanlines pointer-events-none fixed inset-0 z-0" />
 
       {/* Header */}
-      <div className="relative z-10 border-b border-[#FF3B3B]/10 bg-[#05080F]/90 backdrop-blur-lg sticky top-0">
+      <div className="z-10 border-b border-[#FF3B3B]/10 bg-[#05080F]/90 backdrop-blur-lg sticky top-0">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="text-[#8892B0] hover:text-[#00E5FF] transition-colors">
@@ -266,6 +279,46 @@ export default function ReportPage() {
                       <div className="text-xs text-[#4A5568] font-mono mt-1 text-right">
                         {description.length}/500
                       </div>
+                    </div>
+
+                    {/* File Upload */}
+                    <div>
+                      <label className="block text-xs text-[#8892B0] font-mono mb-2">
+                        📸 ATTACH PHOTO / VIDEO EVIDENCE (optional, max 5 files)
+                      </label>
+                      <div
+                        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                        onDragLeave={() => setDragOver(false)}
+                        onDrop={handleDrop}
+                        className={`border-2 border-dashed rounded-lg p-6 text-center relative transition-all cursor-pointer ${dragOver ? 'border-[#00E5FF]/60 bg-[#00E5FF]/05' : 'border-[#00E5FF]/20 hover:border-[#00E5FF]/40'}`}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*,video/*"
+                          multiple
+                          onChange={handleFileChange}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        />
+                        <div className="text-3xl mb-2">📸</div>
+                        <div className="text-sm text-[#E6F1FF] font-medium mb-1">Click to upload or drag &amp; drop</div>
+                        <div className="text-xs text-[#4A5568] mb-2">Take a photo, record a video or select from gallery</div>
+                        <div className="flex gap-2 justify-center flex-wrap">
+                          {['JPG','PNG','MP4','MOV','HEIC'].map(t => (
+                            <span key={t} className="px-2 py-0.5 rounded text-xs font-mono bg-[#00E5FF]/08 border border-[#00E5FF]/15 text-[#00E5FF]">{t}</span>
+                          ))}
+                        </div>
+                      </div>
+                      {attachedFiles.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {attachedFiles.map((f, i) => (
+                            <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono bg-[#00FF9C]/08 border border-[#00FF9C]/20 text-[#00FF9C]">
+                              <span>{f.type.startsWith('video') ? '🎥' : '📸'}</span>
+                              <span className="max-w-24 truncate">{f.name}</span>
+                              <button onClick={() => removeFile(i)} className="text-[#FF3B3B] hover:text-[#FF6B6B] ml-1 font-bold">×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <GlowButton

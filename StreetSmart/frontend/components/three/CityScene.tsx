@@ -6,327 +6,248 @@ import { Stars, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { motion } from 'framer-motion';
 
-// ─── Simple Building ──────────────────────────────────────────────
-function Building({
-  position,
-  height,
-  width,
-  depth,
-  color,
-}: {
-  position: [number, number, number];
-  height: number;
-  width: number;
-  depth: number;
-  color: string;
+function createWindowTexture(floors: number, cols: number): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width  = cols * 14;
+  canvas.height = floors * 18;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#04080f';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (let f = 0; f < floors; f++) {
+    for (let c = 0; c < cols; c++) {
+      if (Math.random() > 0.38) {
+        const r = Math.random();
+        const color = r < 0.5  ? `rgba(255,238,170,${0.55+Math.random()*0.4})`
+                    : r < 0.8  ? `rgba(170,215,255,${0.5+Math.random()*0.4})`
+                    :             `rgba(255,195,90,${0.45+Math.random()*0.35})`;
+        const x = c * 14 + 2;
+        const y = f * 18 + 3;
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, 9, 12);
+      }
+    }
+  }
+  return new THREE.CanvasTexture(canvas);
+}
+
+function Building({ position, height, width, depth }: {
+  position:[number,number,number]; height:number; width:number; depth:number;
 }) {
+  const texture = useMemo(() => {
+    if (typeof document === 'undefined') return null;
+    return createWindowTexture(Math.max(3, Math.floor(height * 2.5)), Math.max(2, Math.floor(width * 2)));
+  }, [height, width]);
+
+  const baseMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color:'#050b14', emissive:'#010306', emissiveIntensity:0.04, metalness:0.65, roughness:0.35,
+  }), []);
+
+  const facadeMat = useMemo(() => !texture ? baseMat : new THREE.MeshStandardMaterial({
+    map:texture, emissiveMap:texture, emissive:new THREE.Color(1,1,1),
+    emissiveIntensity:0.35, metalness:0.5, roughness:0.5,
+  }), [texture, baseMat]);
+
+  const mats = useMemo(() => [baseMat, baseMat, baseMat, baseMat, facadeMat, facadeMat], [baseMat, facadeMat]);
+
   return (
-    <mesh position={[position[0], position[1] + height / 2, position[2]]}>
+    <mesh position={[position[0], position[1]+height/2, position[2]]} material={mats}>
       <boxGeometry args={[width, height, depth]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={0.08}
-        metalness={0.4}
-        roughness={0.6}
-      />
     </mesh>
   );
 }
 
-// ─── Grid Floor ───────────────────────────────────────────────────
-function CityGrid() {
-  return (
-    <gridHelper
-      args={[60, 30, '#00E5FF', '#0B1020']}
-      position={[0, -0.05, 0]}
-    />
-  );
-}
-
-// ─── Minimal Particles ───────────────────────────────────────────
-function Particles({ count = 80 }: { count?: number }) {
-  const ref = useRef<THREE.Points>(null);
-
-  const positions = useMemo(() => {
-    const arr = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      arr[i * 3]     = (Math.random() - 0.5) * 50;
-      arr[i * 3 + 1] = Math.random() * 15;
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 50;
-    }
-    return arr;
-  }, [count]);
-
-  useFrame((state) => {
-    if (ref.current) {
-      ref.current.rotation.y = state.clock.elapsedTime * 0.015;
-    }
+function Antenna({ position }: { position:[number,number,number] }) {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(s => {
+    if (ref.current) (ref.current.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2 + Math.sin(s.clock.elapsedTime*3)*1.2;
   });
-
-  const geo = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    return g;
-  }, [positions]);
-
-  return (
-    <points ref={ref} geometry={geo}>
-      <pointsMaterial
-        color="#00E5FF"
-        size={0.06}
-        transparent
-        opacity={0.5}
-        sizeAttenuation
-      />
-    </points>
-  );
-}
-
-// ─── Auto-rotating camera ────────────────────────────────────────
-function AutoCamera() {
-  useFrame((state) => {
-    const t = state.clock.elapsedTime * 0.04;
-    state.camera.position.x = Math.sin(t) * 3;
-    state.camera.position.z = 28 + Math.cos(t) * 2;
-    state.camera.lookAt(0, 4, 0);
-  });
-  return null;
-}
-
-// ─── Scene content ────────────────────────────────────────────────
-function SceneContent() {
-  const buildings = useMemo(() => {
-    const list = [];
-    const colors = ['#0D1A2E', '#0B1828', '#091422', '#0F1F35'];
-    // Reduced count for performance
-    for (let x = -18; x <= 18; x += 5) {
-      for (let z = -18; z <= 18; z += 5) {
-        if (Math.random() > 0.35) {
-          list.push({
-            id:     `${x}-${z}`,
-            pos:    [x + (Math.random()-0.5)*2, 0, z + (Math.random()-0.5)*2] as [number,number,number],
-            height: 2 + Math.random() * 10,
-            width:  1.2 + Math.random() * 1.2,
-            depth:  1.2 + Math.random() * 1.2,
-            color:  colors[Math.floor(Math.random() * colors.length)],
-          });
-        }
-      }
-    }
-    return list;
-  }, []);
-
   return (
     <>
-      <ambientLight intensity={0.15} color="#001233" />
-      <directionalLight position={[8, 12, 4]} intensity={0.4} color="#00E5FF" />
-      <pointLight position={[0, 18, 0]}   intensity={0.6} color="#00FF9C" distance={35} />
-      <pointLight position={[-12, 4, -12]} intensity={0.5} color="#FF3B3B" distance={20} />
-      <pointLight position={[12, 4, 12]}  intensity={0.5} color="#00E5FF" distance={20} />
-
-      <Stars radius={80} depth={40} count={800} factor={2} saturation={0} fade speed={0.5} />
-      <CityGrid />
-
-      {buildings.map(b => (
-        <Building key={b.id} position={b.pos}
-          height={b.height} width={b.width} depth={b.depth} color={b.color} />
-      ))}
-
-      <Particles count={60} />
-
-      <Float speed={1.5} floatIntensity={1.5}>
-        <mesh position={[-7, 7, -4]}>
-          <sphereGeometry args={[0.25]} />
-          <meshStandardMaterial emissive="#00FF9C" emissiveIntensity={4} color="#00FF9C" />
-        </mesh>
-      </Float>
-      <Float speed={2} floatIntensity={2}>
-        <mesh position={[9, 5, 7]}>
-          <sphereGeometry args={[0.18]} />
-          <meshStandardMaterial emissive="#00E5FF" emissiveIntensity={4} color="#00E5FF" />
-        </mesh>
-      </Float>
-
-      <AutoCamera />
+      <mesh position={[position[0], position[1]+0.9, position[2]]}>
+        <cylinderGeometry args={[0.035, 0.035, 1.8, 5]} />
+        <meshStandardMaterial color="#151f2e" metalness={0.9} roughness={0.2} />
+      </mesh>
+      <mesh ref={ref} position={[position[0], position[1]+2.0, position[2]]}>
+        <sphereGeometry args={[0.09, 7, 7]} />
+        <meshStandardMaterial emissive="#FF3030" emissiveIntensity={2} color="#FF2020" />
+      </mesh>
     </>
   );
 }
 
-// ─── CSS Fallback (when WebGL fails) ────────────────────────────
-function CSSCityFallback() {
-  const buildings = useMemo(() =>
-    Array.from({ length: 24 }, (_, i) => ({
-      id: i,
-      left:   `${4 + (i % 8) * 12}%`,
-      height: `${20 + Math.random() * 45}%`,
-      width:  `${5 + Math.random() * 4}%`,
-      delay:  `${Math.random() * 2}s`,
-      color:  i % 4 === 0 ? '#00FF9C' : i % 4 === 1 ? '#00E5FF' : '#0D1A2E',
-    })), []
-  );
+function RoadLights() {
+  const pts = useMemo(() => {
+    const l: {x:number,z:number,id:string}[] = [];
+    for (let x=-18; x<=18; x+=7) for (let z=-18; z<=18; z+=7) l.push({x,z,id:`${x}-${z}`});
+    return l;
+  }, []);
+  return <>{pts.map(l=>(
+    <mesh key={l.id} position={[l.x,0.08,l.z]}>
+      <sphereGeometry args={[0.06,5,5]}/>
+      <meshStandardMaterial emissive="#FFC060" emissiveIntensity={2} color="#FFC060"/>
+    </mesh>
+  ))}</>;
+}
+
+function CityParticles() {
+  const ref = useRef<THREE.Points>(null);
+  const count = 70;
+  const positions = useMemo(()=>{
+    const a = new Float32Array(count*3);
+    for(let i=0;i<count;i++){a[i*3]=(Math.random()-.5)*50;a[i*3+1]=2+Math.random()*18;a[i*3+2]=(Math.random()-.5)*50;}
+    return a;
+  },[]);
+  useFrame(s=>{if(ref.current)ref.current.rotation.y=s.clock.elapsedTime*0.008;});
+  const geo = useMemo(()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));return g;},[positions]);
+  return <points ref={ref} geometry={geo}><pointsMaterial color="#8ab8d8" size={0.04} transparent opacity={0.28} sizeAttenuation/></points>;
+}
+
+function AutoCamera() {
+  useFrame(s=>{
+    const t=s.clock.elapsedTime*0.022;
+    s.camera.position.x=Math.sin(t)*5;
+    s.camera.position.y=13+Math.sin(t*0.35)*1.5;
+    s.camera.position.z=30+Math.cos(t)*4;
+    s.camera.lookAt(0,5,0);
+  });
+  return null;
+}
+
+function SceneContent() {
+  const {buildings, antennas} = useMemo(()=>{
+    const b:any[]=[],a:any[]=[];
+    for(let x=-22;x<=22;x+=3.5){
+      for(let z=-22;z<=22;z+=3.5){
+        if(Math.random()>0.2){
+          const sky=Math.random()>.75, tall=Math.random()>.5;
+          const h=sky?12+Math.random()*18:tall?6+Math.random()*8:2+Math.random()*4;
+          const w=1.1+Math.random()*1.7, d=1.1+Math.random()*1.7;
+          const px=x+(Math.random()-.5)*1.2, pz=z+(Math.random()-.5)*1.2;
+          b.push({id:`${x}-${z}`,pos:[px,0,pz] as [number,number,number],height:h,width:w,depth:d});
+          if(h>13&&Math.random()>.45) a.push({id:`ant-${x}-${z}`,pos:[px,h,pz] as [number,number,number]});
+        }
+      }
+    }
+    return {buildings:b,antennas:a};
+  },[]);
 
   return (
-    <div className="w-full h-full bg-[#05080F] relative overflow-hidden">
-      {/* Grid overlay */}
-      <div className="absolute inset-0"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(0,229,255,0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,229,255,0.05) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px',
-        }}
-      />
+    <>
+      <ambientLight intensity={0.1} color="#000c18"/>
+      <directionalLight position={[15,30,10]} intensity={0.3} color="#a8c8f0"/>
+      <pointLight position={[0,1,0]}    intensity={0.9} color="#FFC060" distance={45}/>
+      <pointLight position={[-14,2,-14]} intensity={0.45} color="#00C8E8" distance={28}/>
+      <pointLight position={[14,2,14]}  intensity={0.45} color="#00E880" distance={28}/>
+      <pointLight position={[14,2,-14]} intensity={0.35} color="#E83030" distance={22}/>
+      <pointLight position={[-14,2,14]} intensity={0.35} color="#9060C0" distance={22}/>
+      <pointLight position={[0,35,0]}   intensity={0.5}  color="#001428" distance={80}/>
 
-      {/* Animated scan line */}
-      <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/30 to-transparent"
-        style={{ animation: 'scanMove 4s linear infinite' }}
-      />
+      <Stars radius={120} depth={60} count={2500} factor={2.5} saturation={0.08} fade speed={0.15}/>
+      <gridHelper args={[80,40,'#081828','#050f1a']} position={[0,-0.05,0]}/>
+      <RoadLights/>
+      <CityParticles/>
 
-      {/* CSS Buildings */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-end justify-around px-4">
-        {buildings.map(b => (
-          <motion.div
-            key={b.id}
-            initial={{ height: 0 }}
-            animate={{ height: b.height }}
-            transition={{ duration: 1.5, delay: parseFloat(b.delay), ease: 'easeOut' }}
-            className="relative flex-shrink-0"
-            style={{ width: b.width, backgroundColor: '#0B1020', border: `1px solid ${b.color}15` }}
-          >
-            {/* Window grid */}
-            <div className="absolute inset-1 grid grid-cols-2 gap-0.5">
-              {Array.from({ length: 8 }).map((_, wi) => (
-                <div key={wi}
-                  className="rounded-sm"
-                  style={{
-                    backgroundColor: Math.random() > 0.5 ? `${b.color}20` : 'transparent',
-                    animation: `windowFlicker ${2 + Math.random() * 3}s ease-in-out infinite`,
-                    animationDelay: `${Math.random() * 2}s`,
-                  }}
-                />
-              ))}
+      {buildings.map(b=>(
+        <Building key={b.id} position={b.pos} height={b.height} width={b.width} depth={b.depth}/>
+      ))}
+      {antennas.map(a=>(<Antenna key={a.id} position={a.pos}/>))}
+
+      <Float speed={0.7} floatIntensity={1.0}>
+        <mesh position={[-7,10,-5]}>
+          <sphereGeometry args={[0.15]}/>
+          <meshStandardMaterial emissive="#00CCFF" emissiveIntensity={4} color="#00CCFF"/>
+        </mesh>
+      </Float>
+      <Float speed={0.9} floatIntensity={1.2}>
+        <mesh position={[9,7,7]}>
+          <sphereGeometry args={[0.12]}/>
+          <meshStandardMaterial emissive="#00FF88" emissiveIntensity={4} color="#00FF88"/>
+        </mesh>
+      </Float>
+
+      <AutoCamera/>
+    </>
+  );
+}
+
+function CSSCityFallback() {
+  const buildings = useMemo(()=>Array.from({length:30},(_,i)=>({
+    id:i, left:`${2+(i%10)*10}%`, height:`${12+Math.random()*58}%`,
+    width:`${4+Math.random()*4}%`, delay:`${Math.random()*2}s`,
+  })),[]);
+
+  return (
+    <div className="w-full h-full relative overflow-hidden" style={{background:'#020810'}}>
+      <div className="absolute inset-0" style={{background:'linear-gradient(to bottom,#020810 0%,#040c1a 60%,#060e18 100%)' }}/>
+      <div className="absolute inset-0 opacity-30" style={{backgroundImage:`linear-gradient(rgba(0,180,220,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,180,220,0.05) 1px,transparent 1px)`,backgroundSize:'40px 40px'}}/>
+      <div className="absolute bottom-0 left-0 right-0 flex items-end justify-around px-1">
+        {buildings.map(b=>(
+          <motion.div key={b.id} initial={{height:0}} animate={{height:b.height}}
+            transition={{duration:1.8,delay:parseFloat(b.delay),ease:'easeOut'}}
+            className="relative flex-shrink-0 overflow-hidden"
+            style={{width:b.width,backgroundColor:'#060f1c',border:'1px solid #0a1622'}}>
+            <div className="absolute inset-0 p-0.5 grid gap-0.5" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
+              {Array.from({length:30}).map((_,wi)=>{
+                const lit=Math.random()>.38;
+                return <div key={wi} className="rounded-sm" style={{
+                  backgroundColor:lit?(Math.random()>.5?'rgba(255,235,140,0.5)':'rgba(150,205,255,0.45)'):'transparent',
+                  animation:lit?`wf ${2.5+Math.random()*4}s ease-in-out infinite`:'none',
+                  animationDelay:`${Math.random()*3}s`,
+                }}/>;
+              })}
             </div>
-            {/* Roof glow */}
-            <div className="absolute -top-px left-0 right-0 h-px"
-              style={{ backgroundColor: b.color, boxShadow: `0 0 8px ${b.color}` }} />
+            <div className="absolute top-0 left-0 right-0 h-px" style={{backgroundColor:'rgba(0,200,230,0.35)',boxShadow:'0 0 5px rgba(0,200,230,0.35)'}}/>
           </motion.div>
         ))}
       </div>
-
-      {/* Floating orbs */}
-      {[
-        { color: '#00FF9C', x: '20%', y: '30%', size: 8 },
-        { color: '#00E5FF', x: '70%', y: '25%', size: 6 },
-        { color: '#B388FF', x: '45%', y: '20%', size: 5 },
-      ].map((orb, i) => (
-        <motion.div key={i}
-          className="absolute rounded-full"
-          style={{
-            left: orb.x, top: orb.y,
-            width: orb.size, height: orb.size,
-            backgroundColor: orb.color,
-            boxShadow: `0 0 ${orb.size * 3}px ${orb.color}`,
-          }}
-          animate={{ y: [0, -12, 0], opacity: [0.8, 1, 0.8] }}
-          transition={{ duration: 3 + i, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      ))}
-
-      {/* Stars */}
       <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 60 }).map((_, i) => (
-          <div key={i}
-            className="absolute rounded-full bg-white"
-            style={{
-              left:   `${Math.random() * 100}%`,
-              top:    `${Math.random() * 60}%`,
-              width:  `${1 + Math.random()}px`,
-              height: `${1 + Math.random()}px`,
-              opacity: 0.2 + Math.random() * 0.5,
-              animation: `twinkle ${2 + Math.random() * 3}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 3}s`,
-            }}
-          />
+        {Array.from({length:120}).map((_,i)=>(
+          <div key={i} className="absolute rounded-full bg-white" style={{
+            left:`${Math.random()*100}%`,top:`${Math.random()*65}%`,
+            width:`${0.5+Math.random()*1.5}px`,height:`${0.5+Math.random()*1.5}px`,
+            opacity:0.08+Math.random()*0.45,
+            animation:`tw ${2+Math.random()*4}s ease-in-out infinite`,
+            animationDelay:`${Math.random()*4}s`,
+          }}/>
         ))}
       </div>
-
-      <style>{`
-        @keyframes scanMove {
-          0%   { transform: translateY(0); }
-          100% { transform: translateY(100vh); }
-        }
-        @keyframes windowFlicker {
-          0%,100% { opacity: 1; }
-          50%      { opacity: 0.4; }
-        }
-        @keyframes twinkle {
-          0%,100% { opacity: 0.2; }
-          50%      { opacity: 0.8; }
-        }
-      `}</style>
+      <div className="absolute" style={{top:'8%',right:'12%',width:24,height:24,borderRadius:'50%',background:'radial-gradient(circle at 35% 35%,#e5e5cc,#a8a888)',boxShadow:'0 0 16px rgba(210,210,170,0.25)',opacity:0.65}}/>
+      <div className="absolute bottom-0 left-0 right-0 h-20" style={{background:'linear-gradient(to top,rgba(0,180,220,0.035),transparent)'}}/>
+      <style>{`@keyframes wf{0%,100%{opacity:1}45%{opacity:0.2}50%{opacity:0.85}}@keyframes tw{0%,100%{opacity:0.08}50%{opacity:0.6}}`}</style>
     </div>
   );
 }
 
-// ─── Main Export with WebGL detection ────────────────────────────
 export default function CityScene() {
-  const [webglSupported, setWebglSupported] = useState<boolean | null>(null);
-  const [contextLost,    setContextLost]    = useState(false);
+  const [webglSupported, setWebglSupported] = useState<boolean|null>(null);
+  const [contextLost, setContextLost] = useState(false);
 
-  useEffect(() => {
-    // Test WebGL support before attempting to render
+  useEffect(()=>{
     try {
-      const canvas  = document.createElement('canvas');
-      const gl      = canvas.getContext('webgl2') || canvas.getContext('webgl');
-      if (!gl) {
-        setWebglSupported(false);
-        return;
-      }
-      // Check if context is already lost
-      if ((gl as WebGLRenderingContext).isContextLost()) {
-        setWebglSupported(false);
-        return;
-      }
+      const canvas=document.createElement('canvas');
+      const gl=canvas.getContext('webgl2')||canvas.getContext('webgl');
+      if(!gl||(gl as WebGLRenderingContext).isContextLost()){setWebglSupported(false);return;}
       setWebglSupported(true);
-    } catch {
-      setWebglSupported(false);
-    }
-  }, []);
+    } catch {setWebglSupported(false);}
+  },[]);
 
-  // Still checking
-  if (webglSupported === null) return null;
-
-  // WebGL not available → CSS fallback
-  if (!webglSupported || contextLost) {
-    return <CSSCityFallback />;
-  }
+  if(webglSupported===null) return null;
+  if(!webglSupported||contextLost) return <CSSCityFallback/>;
 
   return (
     <Canvas
-      camera={{ position: [0, 12, 28], fov: 55 }}
-      gl={{
-        antialias:        false,   // cheaper
-        alpha:            true,
-        powerPreference:  'default',
-        preserveDrawingBuffer: false,
-        failIfMajorPerformanceCaveat: false,
+      camera={{position:[0,13,30],fov:58}}
+      gl={{antialias:false,alpha:true,powerPreference:'high-performance',preserveDrawingBuffer:false,failIfMajorPerformanceCaveat:false}}
+      dpr={Math.min(window.devicePixelRatio,1.5)}
+      frameloop="always"
+      onCreated={({gl})=>{
+        gl.domElement.addEventListener('webglcontextlost',(e)=>{e.preventDefault();setContextLost(true);});
       }}
-      dpr={Math.min(window.devicePixelRatio, 1.5)}  // cap pixel ratio
-      frameloop="demand"   // only render when needed
-      onCreated={({ gl }) => {
-        gl.domElement.addEventListener('webglcontextlost', (e) => {
-          e.preventDefault();
-          console.warn('WebGL context lost – switching to CSS fallback');
-          setContextLost(true);
-        });
-      }}
-      style={{ background: 'transparent' }}
+      style={{background:'transparent'}}
     >
-      <color attach="background" args={['#05080F']} />
-      <fog attach="fog" args={['#05080F', 25, 65]} />
-      <SceneContent />
+      <color attach="background" args={['#020810']}/>
+      <fog attach="fog" args={['#020810',32,72]}/>
+      <SceneContent/>
     </Canvas>
   );
 }

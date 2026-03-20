@@ -18,6 +18,7 @@ export default function SignupPage() {
   const [confirm,  setConfirm]  = useState('');
   const [showPw,   setShowPw]   = useState(false);
   const [error,    setError]    = useState('');
+  const [selectedProfile, setSelectedProfile] = useState('general');
 
   const handleSubmit = async () => {
     setError('');
@@ -111,6 +112,31 @@ export default function SignupPage() {
                   onChange={(e) => setConfirm(e.target.value)} placeholder="Repeat password"
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                   className="w-full pl-10 pr-4 py-3 rounded-lg bg-[#0B1020] border border-[#1a2a4a] text-[#E6F1FF] placeholder-[#4A5568] text-sm font-mono outline-none focus:border-[#00E5FF]/50 transition-colors" />
+              </div>
+            </div>
+
+            {/* Profile Selector */}
+            <div>
+              <label className="block text-xs font-mono text-[#8892B0] mb-2">SELECT YOUR PROFILE</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value:'general', label:'General', icon:'🧑' },
+                  { value:'woman', label:'Women', icon:'👩' },
+                  { value:'elderly', label:'Elderly', icon:'🧓' },
+                  { value:'wheelchair', label:'Wheelchair', icon:'♿' },
+                  { value:'visually_impaired', label:'Vis. Impaired', icon:'👁️' },
+                  { value:'child', label:'Child', icon:'👶' },
+                ].map(p => (
+                  <button key={p.value} type="button"
+                    onClick={() => setSelectedProfile(p.value)}
+                    className="flex flex-col items-center gap-1 p-2 rounded-lg border transition-all"
+                    style={selectedProfile === p.value
+                      ? { borderColor:'#00FF9C50', background:'#00FF9C12', color:'#00FF9C' }
+                      : { borderColor:'rgba(26,42,74,1)', background:'transparent', color:'#8892B0' }}>
+                    <span className="text-xl">{p.icon}</span>
+                    <span className="text-xs font-mono">{p.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
