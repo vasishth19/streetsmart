@@ -302,7 +302,7 @@ export default function LandingPage() {
       <footer className="relative z-10 border-t border-[#00E5FF]/10 py-8 px-6 text-center">
         <p className="text-[#8892B0] text-sm font-mono">StreetSmart v1.0 · Smart City Navigation · Built for Inclusivity</p>
         <p className="text-[#4A5568] text-xs font-mono mt-2">
-          Built by <span className="text-[#00FF9C]">Vansh Chaturvedi</span> · Assmi Singh · Anshika Dixit · Prakhar Dubey · 2026
+         Built by <span className="text-[#00FF9C]">Vansh Chaturvedi</span> · <span className="text-white">Assmi Singh</span> · <span className="text-white">Anshika Dixit</span> · <span className="text-white">Prakhar Dubey</span> · 2026
         </p>
       </footer>
     </main>
