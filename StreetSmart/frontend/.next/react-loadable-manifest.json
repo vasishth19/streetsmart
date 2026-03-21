@@ -24,5 +24,11 @@
     "files": [
       "static/chunks/_app-pages-browser_node_modules_mapbox-gl_dist_mapbox-gl_js.js"
     ]
+  },
+  "hooks\\useRoutes.ts -> @/services/api": {
+    "id": "hooks\\useRoutes.ts -> @/services/api",
+    "files": [
+      "static/chunks/_app-pages-browser_services_api_ts.js"
+    ]
   }
 }
