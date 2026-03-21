@@ -85,7 +85,7 @@ export default function ReviewsPage() {
     if (comment.length < 10) { alert('Please write at least 10 characters'); return; }
     setLoading(true);
     try {
-      await submitReview({ rating, comment });
+      await submitReview(rating, comment);
     } catch { /* allow offline */ }
     finally {
       setLoading(false);
