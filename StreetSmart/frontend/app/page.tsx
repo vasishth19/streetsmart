@@ -195,17 +195,17 @@ export default function LandingPage() {
       <section className="relative z-10 border-b border-[#00E5FF]/10 bg-[#05080F]/95 backdrop-blur-lg">
         <div className="max-w-6xl mx-auto px-6 py-5">
           <p className="text-xs font-mono text-[#8892B0] mb-3 tracking-widest">// QUICK ACCESS</p>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_LINKS.map(link => (
-              <Link key={link.href + link.label} href={link.href}>
-                <motion.div whileHover={{ scale:1.05, y:-2 }} whileTap={{ scale:0.97 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 cursor-pointer text-sm font-medium"
-                  style={{ borderColor:`${link.color}30`, color:link.color, background:`${link.color}08` }}>
-                  <span>{link.icon}</span><span>{link.label}</span>
-                </motion.div>
-              </Link>
-            ))}
-          </div>
+            <div className="flex flex-wrap gap-2">
+              {QUICK_LINKS.map(link => (
+                <Link key={link.href + link.label} href={link.href}>
+                   <motion.div whileHover={{ scale:1.05, y:-2 }} whileTap={{ scale:0.97 }}
+                     className="flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 cursor-pointer text-sm font-medium"
+                     style={{ borderColor:`${link.color}30`, color:link.color, background:`${link.color}08` }}>
+                    <span>{link.icon}</span><span>{link.label}</span>
+               </motion.div>
+            </Link>
+           ))}
+         </div>
         </div>
       </section>
 

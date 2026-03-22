@@ -115,20 +115,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <nav style={{ position:'fixed', top:0, left:0, right:0, zIndex:900, background:'rgba(5,8,15,0.97)', borderBottom:'1px solid rgba(0,229,255,0.1)', backdropFilter:'blur(20px)', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 1.5rem', height:'56px' }}>
           <a href="/" style={{ fontFamily:'JetBrains Mono, monospace', fontWeight:900, fontSize:'1.1rem', color:'#00FF9C', textDecoration:'none', letterSpacing:'1px' }}>STREET<span style={{ color:'#00E5FF' }}>SMART</span></a>
           <div style={{ display:'flex', gap:'0.25rem', alignItems:'center', flexWrap:'wrap' }}>
-            {[
-              { href:'/map', label:'MAP', color:'#00FF9C' },
-              { href:'/dashboard', label:'DASHBOARD', color:'#00E5FF' },
-              { href:'/report', label:'REPORT', color:'#FF3B3B' },
-              { href:'/reviews', label:'REVIEWS', color:'#FFB020' },
-              { href:'/profile', label:'PROFILE', color:'#B388FF' },
-              { href:'/admin', label:'ADMIN', color:'#9B5DE5' },
-              { href:'/login', label:'LOGIN', color:'#00FF9C' },
-            ].map(item => (
-              <a key={item.href} href={item.href}
-                style={{ color:item.color, textDecoration:'none', fontSize:'0.7rem', fontFamily:'JetBrains Mono, monospace', fontWeight:700, letterSpacing:'0.8px', padding:'0.3rem 0.65rem', borderRadius:'4px', border:`1px solid ${item.color}25`, background:`${item.color}08`, transition:'all 0.2s' }}>
-                {item.label}
-              </a>
-            ))}
+           <a href="/" style={{ fontFamily:'JetBrains Mono, monospace', fontWeight:900, fontSize:'1.1rem', color:'#00FF9C', textDecoration:'none', letterSpacing:'1px' }}>STREET<span style={{ color:'#00E5FF' }}>SMART</span></a>
           </div>
         </nav>
 
