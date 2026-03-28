@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -123,13 +123,35 @@ const radarData = [
   { subject: 'Response',      A: 90 },
 ];
 
-const issues = [
-  { type: 'poor_lighting',   count: 89, resolved: 34 },
-  { type: 'broken_sidewalk', count: 67, resolved: 45 },
-  { type: 'unsafe_area',     count: 52, resolved: 12 },
-  { type: 'missing_ramp',    count: 38, resolved: 28 },
-  { type: 'construction',    count: 29, resolved: 19 },
-];
+const [issues, setIssues] = useState([
+  {type:'poor_lighting',   count:0, resolved:0},
+  {type:'broken_sidewalk', count:0, resolved:0},
+  {type:'unsafe_area',     count:0, resolved:0},
+  {type:'missing_ramp',    count:0, resolved:0},
+  {type:'construction',    count:0, resolved:0},
+]);
+
+useEffect(()=>{
+  const fetchIssues = async () => {
+    try {
+      const res  = await fetch(`${process.env.NEXT_PUBLIC_API_URL||'http://localhost:8000'}/reports`);
+      const data = await res.json();
+      const list = Array.isArray(data)?data:(data.reports||[]);
+      const counts:Record<string,{count:number;resolved:number}> = {};
+      list.forEach((r:any)=>{
+        const type = r.issue_type||'other';
+        if (!counts[type]) counts[type]={count:0,resolved:0};
+        counts[type].count++;
+        if (r.status==='resolved') counts[type].resolved++;
+      });
+      const sorted = Object.entries(counts)
+        .map(([type,v])=>({type,...v}))
+        .sort((a,b)=>b.count-a.count).slice(0,5);
+      if (sorted.length>0) setIssues(sorted);
+    } catch {}
+  };
+  fetchIssues();
+},[]);
 
 // ─── Dashboard page ───────────────────────────────────────────────
 export default function DashboardPage() {
@@ -316,27 +338,6 @@ export default function DashboardPage() {
             ))}
           </div>
         </NeonCard>
-
-        {/* ── Cities grid ──────────────────────────────────────── */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {[
-            { city:'New York',     score:76, routes:892 },
-            { city:'Los Angeles',  score:71, routes:643 },
-            { city:'Chicago',      score:68, routes:421 },
-            { city:'Houston',      score:74, routes:318 },
-            { city:'Phoenix',      score:79, routes:267 },
-            { city:'Philadelphia', score:65, routes:203 },
-          ].map((c) => (
-            <NeonCard key={c.city} color={C.cyan} className="text-center">
-              <div className="font-semibold text-[#E6F1FF] mb-1">{c.city}</div>
-              <div className="text-2xl font-bold font-mono" style={{ color: c.score>=75?C.green:c.score>=65?C.amber:C.red }}>
-                {c.score}
-              </div>
-              <div className="text-xs text-[#8892B0]">Safety Score</div>
-              <div className="text-xs text-[#4A5568] mt-1 font-mono">{c.routes} routes/day</div>
-            </NeonCard>
-          ))}
-        </div>
 
         {/* ═══════════════════════════════════════════════════════
             FEATURE 5 — USER REVIEWS

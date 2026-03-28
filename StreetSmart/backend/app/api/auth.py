@@ -1,36 +1,24 @@
-# ─── backend/app/api/auth.py ─────────────────────────────────────
-# JWT Authentication API
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timedelta
 import hashlib
 from jose import JWTError, jwt
 import os
+from supabase import create_client
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "streetsmart-secret-key-change-in-production")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "streetsmart-secret-key-2026")
 ALGORITHM  = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase     = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-oauth2   = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
-
-# In-memory user store for demo (replace with DB in production)
-_users: dict[int, dict] = {
-    1: {
-        "id": 1, "name": "Demo User",
-        "email": "demo@streetsmart.city",
-        "hashed_password": hashlib.sha256("demo12".encode()).hexdigest(),
-        "created_at": datetime.utcnow().isoformat(),
-    }
-}
-_next_id = 2
-
-# ── Schemas ───────────────────────────────────────────────────────
+oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 class SignupRequest(BaseModel):
     name:     str
@@ -47,18 +35,12 @@ class UserProfile(BaseModel):
     email:      str
     created_at: str
 
-# ── Helpers ───────────────────────────────────────────────────────
-
-def get_user_by_email(email: str) -> Optional[dict]:
-    return next((u for u in _users.values() if u["email"] == email), None)
-
-def get_user_by_id(user_id: int) -> Optional[dict]:
-    return _users.get(user_id)
+def hash_pw(pw: str) -> str:
+    return hashlib.sha256(pw.encode()).hexdigest()
 
 def create_token(user_id: int) -> str:
     expire  = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload = {"sub": str(user_id), "exp": expire}
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode({"sub": str(user_id), "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
 
 def verify_token(token: str) -> int:
     try:
@@ -67,51 +49,54 @@ def verify_token(token: str) -> int:
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+def get_by_email(email: str) -> Optional[dict]:
+    try:
+        r = supabase.table("users").select("*").eq("email", email).execute()
+        return r.data[0] if r.data else None
+    except:
+        return None
+
+def get_by_id(uid: int) -> Optional[dict]:
+    try:
+        r = supabase.table("users").select("*").eq("id", uid).execute()
+        return r.data[0] if r.data else None
+    except:
+        return None
+
 async def get_current_user(token: str = Depends(oauth2)) -> Optional[dict]:
     if not token:
         return None
-    if token == "demo-token-xxx":
-        return _users.get(1)
-    user_id = verify_token(token)
-    user    = get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
+    uid = verify_token(token)
+    return get_by_id(uid)
 
 async def require_user(user=Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Authentication required")
     return user
 
-# ── Endpoints ─────────────────────────────────────────────────────
-
 @router.post("/signup", response_model=TokenResponse)
 async def signup(body: SignupRequest):
-    global _next_id
-    if get_user_by_email(body.email):
+    if get_by_email(body.email):
         raise HTTPException(status_code=400, detail="Email already registered")
     if len(body.password) < 6:
         raise HTTPException(status_code=400, detail="Password too short")
-
-    user_id = _next_id
-    _next_id += 1
-    _users[user_id] = {
-        "id":              user_id,
-        "name":            body.name,
-        "email":           body.email,
-        "hashed_password": hashlib.sha256(body.password.encode()).hexdigest(),
-        "created_at":      datetime.utcnow().isoformat(),
-    }
-    return TokenResponse(access_token=create_token(user_id))
-
+    try:
+        r = supabase.table("users").insert({
+            "name":            body.name,
+            "email":           body.email,
+            "hashed_password": hash_pw(body.password),
+            "created_at":      datetime.utcnow().isoformat(),
+        }).execute()
+        return TokenResponse(access_token=create_token(r.data[0]["id"]))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/login", response_model=TokenResponse)
 async def login(form: OAuth2PasswordRequestForm = Depends()):
-    user = get_user_by_email(form.username)
-    if not user or hashlib.sha256(form.password.encode()).hexdigest() != user["hashed_password"]:
+    user = get_by_email(form.username)
+    if not user or hash_pw(form.password) != user["hashed_password"]:
         raise HTTPException(status_code=401, detail="Incorrect email or password")
     return TokenResponse(access_token=create_token(user["id"]))
-
 
 @router.get("/me", response_model=UserProfile)
 async def me(user=Depends(require_user)):
